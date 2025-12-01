@@ -53,11 +53,6 @@ kt-cctv-landing/
 │   ├── landing/
 │   │   ├── components/     # 랜딩 페이지 컴포넌트
 │   │   │   ├── ReservationForm.tsx
-│   │   │   ├── Hero.tsx
-│   │   │   ├── Features.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── HowToParticipate.tsx
-│   │   │   └── SpecialBenefits.tsx
 │   │   ├── lib/           # 유틸리티 함수
 │   │   │   ├── utils.ts
 │   │   │   └── validations.ts
