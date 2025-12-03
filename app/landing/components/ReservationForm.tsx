@@ -31,8 +31,8 @@ interface ReservationFormProps {
   marketerCode?: string;
 }
 
-type FlowType = 'select' | 'installation' | 'consultation';
 type TimeSlot = 'morning' | 'afternoon';
+type TimeHour = '09' | '10' | '11' | '13' | '14' | '15';
 
 interface FormData {
   phoneNumber: string;
@@ -40,6 +40,7 @@ interface FormData {
   referrerUrl: string;
   reservationDate: Date | null;
   reservationTimeSlot: TimeSlot | null;
+  reservationHour: TimeHour | null;
   outdoorCount: number;
   indoorCount: number;
   address: string;
@@ -139,7 +140,6 @@ const SearchIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 );
 
 export default function ReservationForm({ marketerCode }: ReservationFormProps) {
-  const [flowType, setFlowType] = useState<FlowType>('select');
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -153,6 +153,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
     referrerUrl: '',
     reservationDate: null,
     reservationTimeSlot: null,
+    reservationHour: null,
     outdoorCount: 1,
     indoorCount: 0,
     address: '',
@@ -289,7 +290,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
       const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || '';
       let documentUrls: Record<string, string> = {};
 
-      if (flowType === 'installation' && !skipDocuments) {
+      if (!skipDocuments) {
         const uploadPromises = [];
         const fileTypes = ['idCard', 'paymentCard', 'businessLicense'] as const;
 
@@ -324,22 +325,21 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
       }
 
       const requestData = {
-        inquiryType: flowType,
+        inquiryType: 'installation',
         phoneNumber: formData.phoneNumber.replace(/[^0-9]/g, ''),
         privacyConsent: formData.privacyConsent,
         referrerUrl: formData.referrerUrl,
         marketerCode: marketerCode || null,
-        ...(flowType === 'installation' && {
-          reservationDate: formData.reservationDate?.toISOString().split('T')[0],
-          reservationTimeSlot: formData.reservationTimeSlot,
-          outdoorCount: formData.outdoorCount,
-          indoorCount: formData.indoorCount,
-          address: formData.address,
-          addressDetail: formData.addressDetail,
-          zonecode: formData.zonecode,
-          documents: documentUrls,
-          documentsSubmitted: Object.keys(documentUrls).length > 0,
-        }),
+        reservationDate: formData.reservationDate?.toISOString().split('T')[0],
+        reservationTimeSlot: formData.reservationTimeSlot,
+        reservationHour: formData.reservationHour,
+        outdoorCount: formData.outdoorCount,
+        indoorCount: formData.indoorCount,
+        address: formData.address,
+        addressDetail: formData.addressDetail,
+        zonecode: formData.zonecode,
+        documents: documentUrls,
+        documentsSubmitted: Object.keys(documentUrls).length > 0,
       };
 
       const res = await fetch(`${API_BASE_URL}/landing/api/inquiry`, {
@@ -355,14 +355,14 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
 
       if (typeof window.fbq !== 'undefined') {
         window.fbq('track', 'Lead', {
-          content_name: flowType === 'installation' ? 'Installation Reservation' : 'Consultation Request',
+          content_name: 'Installation Reservation',
         });
       }
 
       if (typeof window.gtag !== 'undefined') {
         window.gtag('event', 'generate_lead', {
           event_category: 'engagement',
-          event_label: flowType === 'installation' ? 'installation_form' : 'consultation_form',
+          event_label: 'installation_form',
         });
       }
 
@@ -378,9 +378,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
     }
   };
 
-  const installationSteps = ['calendar', 'count', 'phone', 'address', 'confirm', 'documents'];
-  const consultationSteps = ['phone', 'confirm'];
-  const steps = flowType === 'installation' ? installationSteps : consultationSteps;
+  const steps = ['calendar', 'count', 'phone', 'address', 'confirm', 'documents'];
   const totalSteps = steps.length;
 
   const goNext = () => {
@@ -394,9 +392,6 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      setFlowType('select');
-      setCurrentStep(0);
     }
   };
 
@@ -478,15 +473,13 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
           </div>
 
           <h2 className="text-headline text-text-primary text-center mb-2">
-            {flowType === 'installation' ? '설치 예약 신청 완료' : '상담 신청 완료'}
+            설치 예약 신청 완료
           </h2>
           <p className="text-body text-text-secondary text-center mb-8">
-            {flowType === 'installation'
-              ? '담당자가 확인 후 예약 확정 문자를 보내드려요'
-              : '전문 상담사가 곧 연락드려요'}
+            담당자가 확인 후 예약 확정 문자를 보내드려요
           </p>
 
-          {flowType === 'installation' && formData.reservationDate && (
+          {formData.reservationDate && (
             <div className="w-full bg-white rounded-2xl p-5 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center">
@@ -498,7 +491,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
                     day: 'numeric',
                     weekday: 'short',
                   })}{' '}
-                  {formData.reservationTimeSlot === 'morning' ? '오전' : '오후'}
+                  {formData.reservationHour}시
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -514,96 +507,38 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
     );
   }
 
-  // 메인 선택 화면
-  if (flowType === 'select') {
-    return (
-      <section className="min-h-screen bg-bg-primary px-5 py-8">
-        <div className="max-w-md mx-auto">
-          <h2 className="text-headline text-text-primary mb-2">어떤 서비스가 필요하세요?</h2>
-          <p className="text-body text-text-secondary mb-8">원하는 서비스를 선택해주세요</p>
-
-          <div className="space-y-3">
-            {/* 설치 예약 카드 */}
-            <button
-              type="button"
-              onClick={() => {
-                setFlowType('installation');
-                setCurrentStep(0);
-              }}
-              className="w-full bg-white rounded-2xl p-5 text-left transition-all hover:shadow-lg active:scale-[0.98] shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-action-primary/10 flex items-center justify-center">
-                    <CalendarIcon className="w-6 h-6 text-action-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-title text-text-primary mb-1">간편 예약하기</h3>
-                    <p className="text-caption text-text-secondary">원하는 날짜에 바로 설치 받을 수 있어요</p>
-                  </div>
-                </div>
-                <ChevronRightIcon className="w-5 h-5 text-text-tertiary" />
-              </div>
-            </button>
-
-            {/* 상담 신청 카드 */}
-            <button
-              type="button"
-              onClick={() => {
-                setFlowType('consultation');
-                setCurrentStep(0);
-              }}
-              className="w-full bg-white rounded-2xl p-5 text-left transition-all hover:shadow-lg active:scale-[0.98] shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-status-progress/10 flex items-center justify-center">
-                    <PhoneIcon className="w-6 h-6 text-status-progress" />
-                  </div>
-                  <div>
-                    <h3 className="text-title text-text-primary mb-1">상담 신청하기</h3>
-                    <p className="text-caption text-text-secondary">전문 상담사가 연락드려요</p>
-                  </div>
-                </div>
-                <ChevronRightIcon className="w-5 h-5 text-text-tertiary" />
-              </div>
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   const currentStepName = steps[currentStep];
 
   return (
     <section className="min-h-screen bg-bg-primary">
-      {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-bg-primary/95 backdrop-blur-sm">
-        <div className="max-w-md mx-auto px-5 h-14 flex items-center">
-          <button
-            type="button"
-            onClick={goBack}
-            className="w-10 h-10 -ml-2 flex items-center justify-center rounded-xl hover:bg-white/60 transition-colors"
-          >
-            <ChevronLeftIcon className="w-6 h-6 text-text-primary" />
-          </button>
+      {/* 헤더 - 첫 번째 스텝에서는 숨김 */}
+      {currentStep > 0 && (
+        <div className="sticky top-0 z-10 bg-bg-primary/95 backdrop-blur-sm">
+          <div className="max-w-md mx-auto px-5 h-14 flex items-center">
+            <button
+              type="button"
+              onClick={goBack}
+              className="w-10 h-10 -ml-2 flex items-center justify-center rounded-xl hover:bg-white/60 transition-colors"
+            >
+              <ChevronLeftIcon className="w-6 h-6 text-text-primary" />
+            </button>
 
-          {/* 진행률 바 */}
-          <div className="flex-1 mx-4">
-            <div className="h-1 bg-white rounded-full overflow-hidden">
-              <div
-                className="h-full bg-action-primary transition-all duration-300"
-                style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
-              />
+            {/* 진행률 바 */}
+            <div className="flex-1 mx-4">
+              <div className="h-1 bg-white rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-action-primary transition-all duration-300"
+                  style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+                />
+              </div>
             </div>
-          </div>
 
-          <span className="text-caption text-text-secondary">
-            {currentStep + 1}/{totalSteps}
-          </span>
+            <span className="text-caption text-text-secondary">
+              {currentStep + 1}/{totalSteps}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 에러 메시지 */}
       {error && (
@@ -615,11 +550,31 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
       )}
 
       <div className="max-w-md mx-auto px-5 py-6">
-        {/* Step: 캘린더 */}
+        {/* Step: 캘린더 (히어로 섹션 포함) */}
         {currentStepName === 'calendar' && (
           <div className="animate-scale-in">
-            <h2 className="text-heading text-text-primary mb-2">설치 날짜를 골라주세요</h2>
-            <p className="text-body text-text-secondary mb-6">원하는 날짜에 바로 설치 받을 수 있어요</p>
+            {/* 히어로 섹션 */}
+            <div className="text-center mb-10">
+              {/* KT 로고 */}
+              <img
+                src="https://kt-cctv.ai.kr/kt-telecop_CI_logo.png"
+                alt="KT텔레캅"
+                className="h-10 mx-auto mb-6"
+              />
+
+              {/* 메인 문구 */}
+              <h1 className="text-[28px] leading-[38px] font-bold text-text-primary mb-3">
+                위약금 고민 끝!
+              </h1>
+              <h2 className="text-[20px] leading-[28px] font-medium text-text-secondary">
+                안전하고 믿을만한
+                <br />
+                <span className="text-[#E52528] font-bold">KT</span>로 갈아타세요
+              </h2>
+            </div>
+
+            {/* 날짜 선택 섹션 제목 */}
+            <h3 className="text-title text-text-primary mb-4">설치 희망일을 선택해주세요</h3>
 
             {/* 캘린더 */}
             <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
@@ -649,47 +604,92 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
               <div className="grid grid-cols-7 gap-1 bg-bg-primary rounded-xl p-2">{renderCalendar()}</div>
             </div>
 
-            {/* 시간대 선택 */}
+            {/* 시간대 선택 - 아코디언 */}
             {formData.reservationDate && (
               <div className="mb-6">
                 <h3 className="text-title text-text-primary mb-3">시간대를 선택해주세요</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, reservationTimeSlot: 'morning' }))}
-                    className={`
-                      p-4 rounded-2xl transition-all
-                      ${formData.reservationTimeSlot === 'morning'
-                        ? 'bg-action-primary text-white shadow-lg'
-                        : 'bg-white text-text-primary shadow-sm hover:shadow-md'
-                      }
-                    `}
-                  >
-                    <SunIcon className={`w-8 h-8 mx-auto mb-2 ${formData.reservationTimeSlot === 'morning' ? 'text-white' : 'text-status-progress'}`} />
-                    <span className="text-title block">오전</span>
-                    <span className={`text-caption ${formData.reservationTimeSlot === 'morning' ? 'text-white/80' : 'text-text-secondary'}`}>9시~12시</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, reservationTimeSlot: 'afternoon' }))}
-                    className={`
-                      p-4 rounded-2xl transition-all
-                      ${formData.reservationTimeSlot === 'afternoon'
-                        ? 'bg-action-primary text-white shadow-lg'
-                        : 'bg-white text-text-primary shadow-sm hover:shadow-md'
-                      }
-                    `}
-                  >
-                    <MoonIcon className={`w-8 h-8 mx-auto mb-2 ${formData.reservationTimeSlot === 'afternoon' ? 'text-white' : 'text-action-primary'}`} />
-                    <span className="text-title block">오후</span>
-                    <span className={`text-caption ${formData.reservationTimeSlot === 'afternoon' ? 'text-white/80' : 'text-text-secondary'}`}>13시~18시</span>
-                  </button>
+                <div className="space-y-3">
+                  {/* 오전 */}
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({
+                        ...prev,
+                        reservationTimeSlot: prev.reservationTimeSlot === 'morning' ? null : 'morning',
+                        reservationHour: prev.reservationTimeSlot === 'morning' ? prev.reservationHour : null
+                      }))}
+                      className="w-full p-4 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <SunIcon className={`w-6 h-6 ${formData.reservationTimeSlot === 'morning' ? 'text-status-progress' : 'text-text-tertiary'}`} />
+                        <span className={`text-title ${formData.reservationTimeSlot === 'morning' ? 'text-text-primary' : 'text-text-secondary'}`}>오전</span>
+                      </div>
+                      <ChevronRightIcon className={`w-5 h-5 text-text-tertiary transition-transform ${formData.reservationTimeSlot === 'morning' ? 'rotate-90' : ''}`} />
+                    </button>
+                    {/* 오전 시간 선택 */}
+                    {formData.reservationTimeSlot === 'morning' && (
+                      <div className="px-4 pb-4 flex gap-2">
+                        {(['09', '10', '11'] as TimeHour[]).map((hour) => (
+                          <button
+                            key={hour}
+                            type="button"
+                            onClick={() => setFormData((prev) => ({ ...prev, reservationHour: hour }))}
+                            className={`flex-1 py-3 rounded-xl text-body font-medium transition-colors ${
+                              formData.reservationHour === hour
+                                ? 'bg-text-primary text-white'
+                                : 'bg-bg-primary text-text-tertiary hover:text-text-secondary'
+                            }`}
+                          >
+                            {hour}시
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 오후 */}
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({
+                        ...prev,
+                        reservationTimeSlot: prev.reservationTimeSlot === 'afternoon' ? null : 'afternoon',
+                        reservationHour: prev.reservationTimeSlot === 'afternoon' ? prev.reservationHour : null
+                      }))}
+                      className="w-full p-4 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <MoonIcon className={`w-6 h-6 ${formData.reservationTimeSlot === 'afternoon' ? 'text-action-primary' : 'text-text-tertiary'}`} />
+                        <span className={`text-title ${formData.reservationTimeSlot === 'afternoon' ? 'text-text-primary' : 'text-text-secondary'}`}>오후</span>
+                      </div>
+                      <ChevronRightIcon className={`w-5 h-5 text-text-tertiary transition-transform ${formData.reservationTimeSlot === 'afternoon' ? 'rotate-90' : ''}`} />
+                    </button>
+                    {/* 오후 시간 선택 */}
+                    {formData.reservationTimeSlot === 'afternoon' && (
+                      <div className="px-4 pb-4 flex gap-2">
+                        {(['13', '14', '15'] as TimeHour[]).map((hour) => (
+                          <button
+                            key={hour}
+                            type="button"
+                            onClick={() => setFormData((prev) => ({ ...prev, reservationHour: hour }))}
+                            className={`flex-1 py-3 rounded-xl text-body font-medium transition-colors ${
+                              formData.reservationHour === hour
+                                ? 'bg-text-primary text-white'
+                                : 'bg-bg-primary text-text-tertiary hover:text-text-secondary'
+                            }`}
+                          >
+                            {hour}시
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* 플로팅 버튼 */}
-            {formData.reservationDate && formData.reservationTimeSlot && (
+            {formData.reservationDate && formData.reservationHour && (
               <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-bg-primary via-bg-primary">
                 <div className="max-w-md mx-auto">
                   <button
@@ -702,7 +702,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
                       day: 'numeric',
                       weekday: 'short',
                     })}{' '}
-                    {formData.reservationTimeSlot === 'morning' ? '오전' : '오후'}으로 예약하기
+                    {formData.reservationHour}시로 예약하기
                   </button>
                 </div>
               </div>
@@ -917,56 +917,54 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
         {currentStepName === 'confirm' && (
           <div className="animate-scale-in">
             <h2 className="text-heading text-text-primary mb-2">
-              {flowType === 'installation' ? '예약 정보를 확인해주세요' : '개인정보 동의'}
+              예약 정보를 확인해주세요
             </h2>
             <p className="text-body text-text-secondary mb-6">정보가 맞는지 확인해주세요</p>
 
             {/* 요약 카드 */}
             <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm">
-              {flowType === 'installation' && (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
-                      <CalendarIcon className="w-5 h-5 text-action-primary" />
-                    </div>
-                    <div>
-                      <p className="text-caption text-text-secondary">예약 일시</p>
-                      <p className="text-body text-text-primary">
-                        {formData.reservationDate?.toLocaleDateString('ko-KR', {
-                          month: 'long',
-                          day: 'numeric',
-                          weekday: 'short',
-                        })}{' '}
-                        {formData.reservationTimeSlot === 'morning' ? '오전' : '오후'}
-                      </p>
-                    </div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
+                    <CalendarIcon className="w-5 h-5 text-action-primary" />
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
-                      <MapPinIcon className="w-5 h-5 text-action-primary" />
-                    </div>
-                    <div>
-                      <p className="text-caption text-text-secondary">설치 장소</p>
-                      <p className="text-body text-text-primary">
-                        {formData.address}
-                        {formData.addressDetail && ` ${formData.addressDetail}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
-                      <CameraIcon className="w-5 h-5 text-action-primary" />
-                    </div>
-                    <div>
-                      <p className="text-caption text-text-secondary">설치 대수</p>
-                      <p className="text-body text-text-primary">
-                        실외 {formData.outdoorCount}대, 실내 {formData.indoorCount}대
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-caption text-text-secondary">예약 일시</p>
+                    <p className="text-body text-text-primary">
+                      {formData.reservationDate?.toLocaleDateString('ko-KR', {
+                        month: 'long',
+                        day: 'numeric',
+                        weekday: 'short',
+                      })}{' '}
+                      {formData.reservationHour}시
+                    </p>
                   </div>
                 </div>
-              )}
-              <div className={`flex items-start gap-3 ${flowType === 'installation' ? 'mt-4 pt-4' : ''}`}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
+                    <MapPinIcon className="w-5 h-5 text-action-primary" />
+                  </div>
+                  <div>
+                    <p className="text-caption text-text-secondary">설치 장소</p>
+                    <p className="text-body text-text-primary">
+                      {formData.address}
+                      {formData.addressDetail && ` ${formData.addressDetail}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
+                    <CameraIcon className="w-5 h-5 text-action-primary" />
+                  </div>
+                  <div>
+                    <p className="text-caption text-text-secondary">설치 대수</p>
+                    <p className="text-body text-text-primary">
+                      실외 {formData.outdoorCount}대, 실내 {formData.indoorCount}대
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 mt-4 pt-4">
                 <div className="w-10 h-10 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
                   <PhoneIcon className="w-5 h-5 text-action-primary" />
                 </div>
@@ -1016,28 +1014,10 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
             <button
               type="button"
               disabled={!formData.privacyConsent || isSubmitting}
-              onClick={() => {
-                if (flowType === 'installation') {
-                  goNext();
-                } else {
-                  handleSubmit();
-                }
-              }}
+              onClick={goNext}
               className="w-full h-14 bg-action-primary hover:bg-action-primary-hover disabled:bg-text-tertiary text-white text-title rounded-2xl transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
             >
-              {isSubmitting ? (
-                <>
-                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  제출 중...
-                </>
-              ) : flowType === 'installation' ? (
-                '신청하기'
-              ) : (
-                '상담 신청하기'
-              )}
+              다음
             </button>
           </div>
         )}

@@ -3,12 +3,12 @@ import './landing/globals.css';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'KT CCTV - 10초만에 알아보기',
-  description: 'KT텔레캅 CCTV 무료 견적 상담 신청',
-  keywords: 'CCTV, KT텔레캅, KT CCTV, 보안, 방범',
+  title: 'KT CCTV - 간편 예약',
+  description: '위약금 고민 끝! 안전하고 믿을만한 KT로 갈아타세요',
+  keywords: 'CCTV, KT텔레캅, KT CCTV, 보안, 방범, 위약금',
   openGraph: {
-    title: 'KT CCTV - 10초만에 알아보기',
-    description: 'KT텔레캅 CCTV 무료 견적 상담 신청',
+    title: 'KT CCTV - 간편 예약',
+    description: '위약금 고민 끝! 안전하고 믿을만한 KT로 갈아타세요',
     type: 'website',
   },
 };
@@ -21,6 +21,13 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Noto Sans KR 폰트 */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
         {/* Google Tag Manager */}
         <Script
           id="gtm-script"
