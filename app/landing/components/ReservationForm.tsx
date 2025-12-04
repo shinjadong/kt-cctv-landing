@@ -378,7 +378,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
     }
   };
 
-  const steps = ['calendar', 'count', 'phone', 'address', 'confirm', 'documents'];
+  const steps = ['calendar', 'phone', 'address', 'confirm', 'documents'];
   const totalSteps = steps.length;
 
   const goNext = () => {
@@ -567,10 +567,24 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
                 위약금 고민 끝!
               </h1>
               <h2 className="text-[20px] leading-[28px] font-medium text-text-secondary">
-                안전하고 믿을만한
+                안전하고 믿을 수 있는
                 <br />
-                <span className="text-[#E52528] font-bold">KT</span>로 갈아타세요
+                <span className="text-[#E52528] font-bold">KT</span>위약금 해방 플랜
               </h2>
+            </div>
+
+            {/* 프로모션/혜택 카드 - 컴포넌트 삽입 영역 */}
+            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm">
+              {/* TODO: 여기에 프로모션 컨텐츠를 추가하세요 */}
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-action-primary/10 flex items-center justify-center flex-shrink-0">
+                  <CheckIcon className="w-6 h-6 text-action-primary" />
+                </div>
+                <div>
+                  <h4 className="text-title text-text-primary mb-1">프로모션 영역</h4>
+                  <p className="text-caption text-text-secondary">여기에 혜택 내용을 추가하세요</p>
+                </div>
+              </div>
             </div>
 
             {/* 날짜 선택 섹션 제목 */}
@@ -604,85 +618,67 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
               <div className="grid grid-cols-7 gap-1 bg-bg-primary rounded-xl p-2">{renderCalendar()}</div>
             </div>
 
-            {/* 시간대 선택 - 아코디언 */}
+            {/* 시간대 선택 - 오전/오후 시간대 바로 노출 */}
             {formData.reservationDate && (
-              <div className="mb-6">
+              <div className="mb-6 animate-scale-in">
                 <h3 className="text-title text-text-primary mb-3">시간대를 선택해주세요</h3>
                 <div className="space-y-3">
                   {/* 오전 */}
-                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({
-                        ...prev,
-                        reservationTimeSlot: prev.reservationTimeSlot === 'morning' ? null : 'morning',
-                        reservationHour: prev.reservationTimeSlot === 'morning' ? prev.reservationHour : null
-                      }))}
-                      className="w-full p-4 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <SunIcon className={`w-6 h-6 ${formData.reservationTimeSlot === 'morning' ? 'text-status-progress' : 'text-text-tertiary'}`} />
-                        <span className={`text-title ${formData.reservationTimeSlot === 'morning' ? 'text-text-primary' : 'text-text-secondary'}`}>오전</span>
-                      </div>
-                      <ChevronRightIcon className={`w-5 h-5 text-text-tertiary transition-transform ${formData.reservationTimeSlot === 'morning' ? 'rotate-90' : ''}`} />
-                    </button>
-                    {/* 오전 시간 선택 */}
-                    {formData.reservationTimeSlot === 'morning' && (
-                      <div className="px-4 pb-4 flex gap-2">
-                        {(['09', '10', '11'] as TimeHour[]).map((hour) => (
-                          <button
-                            key={hour}
-                            type="button"
-                            onClick={() => setFormData((prev) => ({ ...prev, reservationHour: hour }))}
-                            className={`flex-1 py-3 rounded-xl text-body font-medium transition-colors ${
-                              formData.reservationHour === hour
-                                ? 'bg-text-primary text-white'
-                                : 'bg-bg-primary text-text-tertiary hover:text-text-secondary'
-                            }`}
-                          >
-                            {hour}시
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  <div className="bg-white rounded-2xl shadow-sm p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <SunIcon className={`w-6 h-6 ${formData.reservationTimeSlot === 'morning' ? 'text-status-progress' : 'text-text-tertiary'}`} />
+                      <span className={`text-title ${formData.reservationTimeSlot === 'morning' ? 'text-text-primary' : 'text-text-secondary'}`}>오전</span>
+                    </div>
+                    {/* 오전 시간 선택 - 바로 노출 */}
+                    <div className="flex gap-2">
+                      {(['09', '10', '11'] as TimeHour[]).map((hour) => (
+                        <button
+                          key={hour}
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ 
+                            ...prev, 
+                            reservationTimeSlot: 'morning',
+                            reservationHour: hour 
+                          }))}
+                          className={`flex-1 py-3 rounded-xl text-body font-medium transition-colors ${
+                            formData.reservationHour === hour && formData.reservationTimeSlot === 'morning'
+                              ? 'bg-status-progress text-white'
+                              : 'bg-bg-primary text-text-tertiary hover:text-text-secondary'
+                          }`}
+                        >
+                          {hour}시
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* 오후 */}
-                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({
-                        ...prev,
-                        reservationTimeSlot: prev.reservationTimeSlot === 'afternoon' ? null : 'afternoon',
-                        reservationHour: prev.reservationTimeSlot === 'afternoon' ? prev.reservationHour : null
-                      }))}
-                      className="w-full p-4 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <MoonIcon className={`w-6 h-6 ${formData.reservationTimeSlot === 'afternoon' ? 'text-action-primary' : 'text-text-tertiary'}`} />
-                        <span className={`text-title ${formData.reservationTimeSlot === 'afternoon' ? 'text-text-primary' : 'text-text-secondary'}`}>오후</span>
-                      </div>
-                      <ChevronRightIcon className={`w-5 h-5 text-text-tertiary transition-transform ${formData.reservationTimeSlot === 'afternoon' ? 'rotate-90' : ''}`} />
-                    </button>
-                    {/* 오후 시간 선택 */}
-                    {formData.reservationTimeSlot === 'afternoon' && (
-                      <div className="px-4 pb-4 flex gap-2">
-                        {(['13', '14', '15'] as TimeHour[]).map((hour) => (
-                          <button
-                            key={hour}
-                            type="button"
-                            onClick={() => setFormData((prev) => ({ ...prev, reservationHour: hour }))}
-                            className={`flex-1 py-3 rounded-xl text-body font-medium transition-colors ${
-                              formData.reservationHour === hour
-                                ? 'bg-text-primary text-white'
-                                : 'bg-bg-primary text-text-tertiary hover:text-text-secondary'
-                            }`}
-                          >
-                            {hour}시
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  <div className="bg-white rounded-2xl shadow-sm p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <MoonIcon className={`w-6 h-6 ${formData.reservationTimeSlot === 'afternoon' ? 'text-action-primary' : 'text-text-tertiary'}`} />
+                      <span className={`text-title ${formData.reservationTimeSlot === 'afternoon' ? 'text-text-primary' : 'text-text-secondary'}`}>오후</span>
+                    </div>
+                    {/* 오후 시간 선택 - 바로 노출 */}
+                    <div className="flex gap-2">
+                      {(['13', '14', '15'] as TimeHour[]).map((hour) => (
+                        <button
+                          key={hour}
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ 
+                            ...prev, 
+                            reservationTimeSlot: 'afternoon',
+                            reservationHour: hour 
+                          }))}
+                          className={`flex-1 py-3 rounded-xl text-body font-medium transition-colors ${
+                            formData.reservationHour === hour && formData.reservationTimeSlot === 'afternoon'
+                              ? 'bg-action-primary text-white'
+                              : 'bg-bg-primary text-text-tertiary hover:text-text-secondary'
+                          }`}
+                        >
+                          {hour}시
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -710,109 +706,11 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
           </div>
         )}
 
-        {/* Step: 설치 대수 */}
-        {currentStepName === 'count' && (
-          <div className="animate-scale-in">
-            <h2 className="text-heading text-text-primary mb-2">설치할 CCTV 대수를 알려주세요</h2>
-            <p className="text-body text-text-secondary mb-8">정확하지 않아도 괜찮아요</p>
-
-            <div className="space-y-4">
-              {/* 실외 설치 */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-title text-text-primary">실외 설치</h4>
-                    <p className="text-caption text-text-secondary">건물 외부, 주차장 등</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          outdoorCount: Math.max(0, prev.outdoorCount - 1),
-                        }))
-                      }
-                      className="w-10 h-10 rounded-xl bg-bg-primary flex items-center justify-center text-text-primary text-xl font-medium hover:bg-bg-primary/70 transition-colors"
-                    >
-                      -
-                    </button>
-                    <span className="w-8 text-center text-title text-text-primary">
-                      {formData.outdoorCount}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          outdoorCount: Math.min(99, prev.outdoorCount + 1),
-                        }))
-                      }
-                      className="w-10 h-10 rounded-xl bg-action-primary flex items-center justify-center text-white text-xl font-medium hover:bg-action-primary-hover transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* 실내 설치 */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-title text-text-primary">실내 설치</h4>
-                    <p className="text-caption text-text-secondary">사무실, 매장 내부 등</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          indoorCount: Math.max(0, prev.indoorCount - 1),
-                        }))
-                      }
-                      className="w-10 h-10 rounded-xl bg-bg-primary flex items-center justify-center text-text-primary text-xl font-medium hover:bg-bg-primary/70 transition-colors"
-                    >
-                      -
-                    </button>
-                    <span className="w-8 text-center text-title text-text-primary">
-                      {formData.indoorCount}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          indoorCount: Math.min(99, prev.indoorCount + 1),
-                        }))
-                      }
-                      className="w-10 h-10 rounded-xl bg-action-primary flex items-center justify-center text-white text-xl font-medium hover:bg-action-primary-hover transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <button
-                type="button"
-                disabled={formData.outdoorCount + formData.indoorCount === 0}
-                onClick={goNext}
-                className="w-full h-14 bg-action-primary hover:bg-action-primary-hover disabled:bg-text-tertiary text-white text-title rounded-2xl transition-colors disabled:cursor-not-allowed shadow-lg"
-              >
-                다음
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Step: 전화번호 */}
         {currentStepName === 'phone' && (
           <div className="animate-scale-in">
-            <h2 className="text-heading text-text-primary mb-2">전화번호를 입력해주세요</h2>
+            <h2 className="text-heading text-text-primary mb-2">전화번호를 알려주세요</h2>
             <p className="text-body text-text-secondary mb-8">예약 확인 문자를 보내드려요</p>
 
             <div className="bg-white rounded-2xl p-5 shadow-sm">
@@ -852,8 +750,8 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
         {/* Step: 주소 */}
         {currentStepName === 'address' && (
           <div className="animate-scale-in">
-            <h2 className="text-heading text-text-primary mb-2">설치할 주소를 입력해주세요</h2>
-            <p className="text-body text-text-secondary mb-8">정확한 주소를 알려주세요</p>
+            <h2 className="text-heading text-text-primary mb-2">어디에 설치할까요?</h2>
+            <p className="text-body text-text-secondary mb-8">기사님이 찾아갈 주소예요</p>
 
             <div className="space-y-4">
               {/* 주소 검색 */}
@@ -917,9 +815,9 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
         {currentStepName === 'confirm' && (
           <div className="animate-scale-in">
             <h2 className="text-heading text-text-primary mb-2">
-              예약 정보를 확인해주세요
+            예약 정보가 맞나요?
             </h2>
-            <p className="text-body text-text-secondary mb-6">정보가 맞는지 확인해주세요</p>
+            <p className="text-body text-text-secondary mb-6">틀린 정보가 있으면 수정해주세요</p>
 
             {/* 요약 카드 */}
             <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm">
@@ -1007,7 +905,7 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
                 >
                   개인정보 처리방침
                 </a>
-                에 동의합니다 <span className="text-error">*</span>
+                동의 (필수) <span className="text-error">*</span>
               </span>
             </label>
 
@@ -1025,8 +923,8 @@ export default function ReservationForm({ marketerCode }: ReservationFormProps) 
         {/* Step: 서류 첨부 */}
         {currentStepName === 'documents' && (
           <div className="animate-scale-in">
-            <h2 className="text-heading text-text-primary mb-2">서류를 첨부해주세요</h2>
-            <p className="text-body text-text-secondary mb-8">서류를 첨부하면 예약이 빨라져요</p>
+            <h2 className="text-heading text-text-primary mb-2">서류를 준비해주세요</h2>
+            <p className="text-body text-text-secondary mb-8">미리 첨부하면 예약이 빨라져요</p>
 
             <div className="space-y-3">
               {/* 신분증 */}
